@@ -6,7 +6,7 @@ import argparse
 import csv
 import os
 
-# Generate log by accessing BQ
+# Access BigQuery and generate log
 def generate_logs(table, date, filename):
     # Build query
     client = bigquery.Client()
@@ -38,7 +38,6 @@ def generate_logs(table, date, filename):
 
 # Upload log to GCS bucket
 def upload_logs(bucket_name, source_file_name, destination_blob_name):
-    """Uploads a file to the bucket."""
     storage_client = storage.Client()
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
