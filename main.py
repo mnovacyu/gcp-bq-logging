@@ -62,7 +62,7 @@ date = args.date # YYYY-MM-DD
 bucket = args.bucket
 table = args.table
 
-# Set up script logging
+# Set "level=logging.DEBUG" if you want more verbose logging output
 logging.basicConfig(level=logging.INFO, filename="logfile", filemode="a+",
     format="%(asctime)-15s %(levelname)-8s %(message)s")
 
