@@ -1,10 +1,11 @@
 # https://cloud.google.com/bigquery/docs/reference/libraries
-
 from google.cloud import bigquery
 from google.cloud import storage
 import argparse
 import csv
+import logging
 import os
+
 
 # Access BigQuery and generate log
 def generate_logs(table, date, filename):
@@ -34,7 +35,7 @@ def generate_logs(table, date, filename):
         writer.writerow(row)
         i += 1
 
-    print("Generated log with %s rows to %s" % (i, filename))
+    logging.info("Generated BQ log with %s rows to %s" % (i, filename))
 
 # Upload log to GCS bucket
 def upload_logs(bucket_name, source_file_name, destination_blob_name):
@@ -44,9 +45,8 @@ def upload_logs(bucket_name, source_file_name, destination_blob_name):
 
     blob.upload_from_filename(source_file_name)
 
-    print("File {} uploaded to {}.".format(
-        source_file_name,
-        destination_blob_name))
+    logging.info("Uploaded BQ log to gs://%s/%s" %
+        (bucket_name, destination_blob_name))
 
 # Argument Parser
 parser = argparse.ArgumentParser()
@@ -62,7 +62,24 @@ date = args.date # YYYY-MM-DD
 bucket = args.bucket
 table = args.table
 
+# Set up script logging
+logging.basicConfig(level=logging.INFO, filename="logfile", filemode="a+",
+    format="%(asctime)-15s %(levelname)-8s %(message)s")
+
+# Run it
 filename = "%s_logging.csv" % date
 
-generate_logs(table, date, filename)
-upload_logs(bucket, filename, filename)
+try:
+    generate_logs(table, date, filename)
+except Exception as e:
+    logging.error("Generating Logs Failed: %s" % str(e))
+
+try:
+    upload_logs(bucket, filename, filename)
+except Exception as e:
+    logging.error("Uploading Logs Failed: %s" % str(e))
+
+try:
+    os.remove(filename) # Delete file after upload
+except Exception as e:
+    logging.error("Deleting Logs Failed: %s" % str(e))
